@@ -42,6 +42,9 @@ import com.matyrobbrt.matytech.network.MTNetwork;
 import com.matyrobbrt.matytech.util.MTKeySync;
 import com.matyrobbrt.matytech.util.PlayerGearData;
 
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
+
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -82,4 +85,12 @@ public class MatyTech extends ModSetup {
 	public void onWorldLoad(final WorldEvent.Load event) {
 		PlayerGearData.INSTANCE.initializeLevel(event.getWorld());
 	}
+
+	public static final ItemGroup MATY_TECH_TAB = new ItemGroup(ItemGroup.TABS.length, "matytech") {
+
+		@Override
+		public ItemStack makeIcon() {
+			return ItemStack.EMPTY;
+		}
+	};
 }

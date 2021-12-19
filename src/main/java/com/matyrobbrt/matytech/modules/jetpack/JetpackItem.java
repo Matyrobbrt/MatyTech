@@ -27,6 +27,8 @@
 
 package com.matyrobbrt.matytech.modules.jetpack;
 
+import java.util.List;
+
 import com.matyrobbrt.lib.MatyLib;
 import com.matyrobbrt.lib.registry.annotation.RegistryHolder;
 import com.matyrobbrt.lib.util.ColourCodes;
@@ -38,17 +40,26 @@ import com.matyrobbrt.matytech.api.item.IMode;
 import com.matyrobbrt.matytech.api.item.IModeItem;
 import com.matyrobbrt.matytech.api.item.IRenderableArmour;
 import com.matyrobbrt.matytech.api.item.SpecialArmourMaterial;
+import com.matyrobbrt.matytech.init.TagInit;
 
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
 
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 
 @RegistryHolder(modid = MatyTech.MOD_ID)
 public class JetpackItem extends ArmorItem
@@ -103,6 +114,24 @@ public class JetpackItem extends ArmorItem
 	public static JetpackMode setMode(ItemStack stack, JetpackMode mode) {
 		NBTHelper.setString(stack, "JetpackMode", mode.getName());
 		return mode;
+	}
+
+	@Override
+	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt) {
+		return new FluidHandlerItemStackSimple(stack, 12000) {
+
+			@Override
+			public boolean isFluidValid(int tank, FluidStack stack) {
+				return stack.getFluid().is(TagInit.Fluids.HYDROGEN);
+			}
+		};
+	}
+
+	@Override
+	public void appendHoverText(ItemStack pStack, World pLevel, List<ITextComponent> pTooltip, ITooltipFlag pFlag) {
+		pStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(cap -> {
+			pTooltip.add(new StringTextComponent("Contains " + cap.getFluidInTank(0).getAmount()));
+		});
 	}
 
 	public enum JetpackMode implements INamedEnum, IStringSerializable, IMode<JetpackMode> {
