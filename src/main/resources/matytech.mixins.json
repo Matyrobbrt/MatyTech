@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "com.matyrobbrt.matytech.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"refmap": "matytech.refmap.json",
+	"mixins": [
+	],
+	"client": [
+	],
+	"minVersion": "0.8"
+}

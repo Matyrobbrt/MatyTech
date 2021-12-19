@@ -1,0 +1,36 @@
+modLoader="javafml"
+loaderVersion="[36,)"
+license="MIT"
+issueTrackerURL="https://github.com/Matyrobbrt/MatyTech/issues"
+[[mods]] #mandatory
+modId="matytech" #mandatory
+version="${version}" #mandatory
+displayName="MatyTech" #mandatory
+# A URL to query for updates for this mod. See the JSON update specification https://mcforge.readthedocs.io/en/latest/gettingstarted/autoupdate/
+#updateJSONURL="https://change.me.example.invalid/updates.json" #optional
+# A URL for the "homepage" for this mod, displayed in the mod UI
+#displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
+#logoFile="examplemod.png"
+#credits="Thanks for this example mod goes to Java"
+# A text field displayed in the mod UI
+authors="Matyrobbrt" #optional
+# The description text for the mod (multi line!) (#mandatory)
+description='''
+A mod about technology
+'''
+
+[[dependencies.matytech]]
+    modId="forge" #mandatory
+    mandatory=true #mandatory
+    versionRange="[36.2.22,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.matytech]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.5,1.17)"
+    ordering="NONE"
+    side="BOTH"
+
+# TODO The other optional dependencies, and MatyLib
