@@ -67,9 +67,12 @@ public class JetpackClient {
 			}
 
 			if (isJetpackActive(minecraft.player)) {
-				if (JetpackModule.handleJetpackMotion(minecraft.player, JetpackItem.getMode(chestStack),
-						() -> minecraft.player.input.jumping)) {
-					minecraft.player.fallDistance = 0.0F;
+				JetpackMode mode = JetpackItem.getMode(chestStack);
+				if (JetpackItem.hasFuelForFlight(chestStack, mode)) {
+					if (JetpackModule.handleJetpackMotion(minecraft.player, mode,
+							() -> minecraft.player.input.jumping)) {
+						minecraft.player.fallDistance = 0.0F;
+					}
 				}
 			}
 		}
@@ -130,6 +133,7 @@ public class JetpackClient {
 			ItemStack chest = player.getItemBySlot(EquipmentSlotType.CHEST);
 			if (!chest.isEmpty()) {
 				JetpackMode mode = JetpackItem.getMode(chest);
+				if (!JetpackItem.hasFuelForFlight(chest, mode)) { return false; }
 				if (mode == JetpackMode.NORMAL) {
 					return minecraft.screen == null && minecraft.player.input.jumping;
 				} else if (mode == JetpackMode.HOVER) {

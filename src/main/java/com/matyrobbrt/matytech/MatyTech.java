@@ -35,9 +35,14 @@ import org.apache.logging.log4j.Logger;
 
 import com.matyrobbrt.lib.ClientSetup;
 import com.matyrobbrt.lib.ModSetup;
+import com.matyrobbrt.lib.annotation.SyncValue;
 import com.matyrobbrt.lib.registry.annotation.AnnotationProcessor;
+import com.matyrobbrt.matytech.api.capability.MTEnergyStorage;
+import com.matyrobbrt.matytech.api.capability.MTFluidTank;
 import com.matyrobbrt.matytech.api.item.CapabilityRenderableArmour;
 import com.matyrobbrt.matytech.client.MTClientSetup;
+import com.matyrobbrt.matytech.config.CommonConfig;
+import com.matyrobbrt.matytech.config.ServerConfig;
 import com.matyrobbrt.matytech.network.MTNetwork;
 import com.matyrobbrt.matytech.util.MTKeySync;
 import com.matyrobbrt.matytech.util.PlayerGearData;
@@ -45,6 +50,7 @@ import com.matyrobbrt.matytech.util.PlayerGearData;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -63,6 +69,19 @@ public class MatyTech extends ModSetup {
 
 	public MatyTech() {
 		super(MOD_ID);
+		ForgeMod.enableMilkFluid();
+
+		ANN_PROCESSOR.afterInit(() -> {
+			CommonConfig.register();
+			ServerConfig.register();
+		});
+
+		ANN_PROCESSOR.setAutoBlockItemTab(b -> MATY_TECH_TAB);
+
+		SyncValue.Helper.registerSerializer(MTFluidTank.class, MTFluidTank::fromNBT,
+				(nbt, tank) -> tank.serialize(nbt));
+		SyncValue.Helper.registerSerializer(MTEnergyStorage.class, MTEnergyStorage::fromNbt,
+				(nbt, es) -> es.serialize(nbt));
 	}
 
 	@Override

@@ -28,6 +28,8 @@
 package com.matyrobbrt.matytech.modules.jetpack;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import com.matyrobbrt.lib.MatyLib;
 import com.matyrobbrt.lib.registry.annotation.RegistryHolder;
@@ -35,6 +37,7 @@ import com.matyrobbrt.lib.util.ColourCodes;
 import com.matyrobbrt.lib.util.INamedEnum;
 import com.matyrobbrt.lib.util.helper.NBTHelper;
 import com.matyrobbrt.matytech.MatyTech;
+import com.matyrobbrt.matytech.api.capability.EnergyStorageItemStack;
 import com.matyrobbrt.matytech.api.client.model.CustomArmourModel;
 import com.matyrobbrt.matytech.api.item.IMode;
 import com.matyrobbrt.matytech.api.item.IModeItem;
@@ -49,6 +52,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -56,10 +60,16 @@ import net.minecraft.world.World;
 
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 
 @RegistryHolder(modid = MatyTech.MOD_ID)
 public class JetpackItem extends ArmorItem
@@ -116,33 +126,118 @@ public class JetpackItem extends ArmorItem
 		return mode;
 	}
 
+	public static boolean hasFuelForFlight(ItemStack stack, JetpackMode mode) {
+		AtomicBoolean value = new AtomicBoolean(false);
+
+		stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(cap -> {
+			FluidStack fluid = cap.getFluidInTank(0);
+			if (!fluid.isEmpty() && fluid.getFluid().is(TagInit.Fluids.HYDROGEN)
+					&& fluid.getAmount() >= mode.getFuelPerTick()) {
+				value.set(true);
+			}
+		});
+
+		return value.get();
+	}
+
+	public static boolean consumeFuel(ItemStack stack, JetpackMode mode) {
+		boolean hasFuel = hasFuelForFlight(stack, mode);
+
+		if (hasFuel) {
+			stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(cap -> {
+				FluidStack fluid = cap.getFluidInTank(0);
+				cap.drain(new FluidStack(fluid.getFluid(), mode.getFuelPerTick()), FluidAction.EXECUTE);
+			});
+		}
+
+		return hasFuel;
+	}
+
+	private static final int ENERGY_CONSUMED = 200;
+
+	public static boolean hasEnergyForFall(ItemStack stack) {
+		if (!(stack.getItem() instanceof JetpackItem)) { return false; }
+
+		AtomicBoolean value = new AtomicBoolean(false);
+		stack.getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
+			if (cap.getEnergyStored() >= ENERGY_CONSUMED) {
+				value.set(true);
+			}
+		});
+		return value.get();
+	}
+
+	public static boolean consumeFallEnergy(ItemStack stack) {
+		boolean hasEnergy = hasEnergyForFall(stack);
+
+		if (hasEnergy) {
+			stack.getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
+				if (cap.getEnergyStored() >= ENERGY_CONSUMED) {
+					System.out.println(cap.extractEnergy(ENERGY_CONSUMED, false));
+				}
+			});
+		}
+
+		return hasEnergy;
+	}
+
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt) {
-		return new FluidHandlerItemStackSimple(stack, 12000) {
+		return new ICapabilityProvider() {
+
+			private final FluidHandlerItemStack fluid = new FluidHandlerItemStack(stack, 12000) {
+
+				@Override
+				public boolean isFluidValid(int tank, FluidStack stack) {
+					return stack.getFluid().is(TagInit.Fluids.HYDROGEN);
+				}
+			};
+
+			private final LazyOptional<IFluidHandlerItem> fluidOptional = LazyOptional.of(() -> fluid);
+
+			private final EnergyStorageItemStack energy = new EnergyStorageItemStack(stack, 12000, 12000, 12000);
+
+			private final LazyOptional<IEnergyStorage> energyOptional = LazyOptional.of(() -> energy);
 
 			@Override
-			public boolean isFluidValid(int tank, FluidStack stack) {
-				return stack.getFluid().is(TagInit.Fluids.HYDROGEN);
+			public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+				if (cap == CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY) {
+					return fluidOptional.cast();
+				} else if (cap == CapabilityEnergy.ENERGY) { return energyOptional.cast(); }
+
+				return LazyOptional.empty();
 			}
 		};
 	}
 
+	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void appendHoverText(ItemStack pStack, World pLevel, List<ITextComponent> pTooltip, ITooltipFlag pFlag) {
 		pStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(cap -> {
-			pTooltip.add(new StringTextComponent("Contains " + cap.getFluidInTank(0).getAmount()));
+			pTooltip.add(new StringTextComponent("Contains Fluid " + cap.getFluidInTank(0).getAmount()));
 		});
+		pStack.getCapability(CapabilityEnergy.ENERGY).ifPresent(cap -> {
+			pTooltip.add(new StringTextComponent("Contains Enegy " + cap.getEnergyStored()));
+		});
+
+		pTooltip.add(new StringTextComponent("Hover " + JetpackMode.HOVER.getFuelPerTick()));
+		pTooltip.add(new StringTextComponent("Normal " + JetpackMode.NORMAL.getFuelPerTick()));
 	}
 
 	public enum JetpackMode implements INamedEnum, IStringSerializable, IMode<JetpackMode> {
 
-		NORMAL("normal"), HOVER("hover"), DISABLED("disabled");
+		NORMAL("normal", JetpackModule::getHydrogenNormalPerTick),
+		HOVER("hover", JetpackModule::getHydrogenHoverPerTick), DISABLED("disabled", () -> 0);
 
 		private final String name;
+		private final Supplier<Integer> fuelPerTick;
 
-		private JetpackMode(String name) {
+		private JetpackMode(String name, Supplier<Integer> fuelPerTick) {
 			this.name = name;
+			this.fuelPerTick = fuelPerTick;
 		}
+
+		public int getFuelPerTick() { return fuelPerTick.get(); }
 
 		@Override
 		public String getName() { return name; }

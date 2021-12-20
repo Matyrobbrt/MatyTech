@@ -36,6 +36,7 @@ import com.matyrobbrt.lib.module.IModule;
 import com.matyrobbrt.lib.module.Module;
 import com.matyrobbrt.lib.registry.annotation.RegisterItem;
 import com.matyrobbrt.matytech.MatyTech;
+import com.matyrobbrt.matytech.api.config.BaseTOMLConfig;
 import com.matyrobbrt.matytech.modules.jetpack.JetpackItem.JetpackMode;
 import com.matyrobbrt.matytech.util.MTKeySync;
 
@@ -44,14 +45,19 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.vector.Vector3d;
 
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.ForgeConfigSpec.Builder;
+import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.config.ModConfig.Type;
 
 @SuppressWarnings("static-method")
 @Module(id = @RL(modid = MatyTech.MOD_ID, path = "jetpack"))
@@ -64,6 +70,58 @@ public class JetpackModule implements IModule {
 	public void register(IEventBus modBus, IEventBus forgeBus) {
 		IModule.super.register(modBus, forgeBus);
 		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> forgeBus.register(new JetpackClient()));
+		forgeBus.register(this);
+	}
+
+	/**
+	 * @deprecated use {@link #getHydrogenNormalPerTick()}
+	 */
+	@Deprecated
+	public static ConfigValue<Integer> hydrogenNormalPerTick;
+	/**
+	 * @deprecated use {@link #getHydrogenHoverPerTick()}
+	 */
+	@Deprecated
+	public static ConfigValue<Integer> hydrogenHoverPerTick;
+
+	@Override
+	public void initConfig(Type configType, Builder builder) {
+		if (configType != Type.SERVER) { return; }
+		builder.push("jetpack");
+		{
+			hydrogenNormalPerTick = BaseTOMLConfig.config(
+					"The amount of hydrogen the Jetpack uses for each flight tick, in normal mode.",
+					"hydrogenNormalPerTick", 1, true, builder);
+			hydrogenHoverPerTick = BaseTOMLConfig.config(
+					"The amount of hydrogen the Jetpack uses for each flight tick, in hover mode.",
+					"hydrogenHoverPerTick", 2, true, builder);
+		}
+		builder.pop();
+	}
+
+	public static int getHydrogenNormalPerTick() {
+		return hydrogenNormalPerTick == null ? 1 : hydrogenNormalPerTick.get();
+	}
+
+	public static int getHydrogenHoverPerTick() {
+		return hydrogenHoverPerTick == null ? 1 : hydrogenHoverPerTick.get();
+	}
+
+	@SubscribeEvent
+	public void livingHurt(final LivingHurtEvent event) {
+		if (event.getAmount() <= 0 || !event.getEntityLiving().isAlive() || event.getEntity().level.isClientSide()) {
+			// If the entity is dead somehow, DO NOT execute any logic.
+			// If client-side, DO NOT execute logic.
+			return;
+		}
+		if (event.getSource() == DamageSource.FALL) {
+			ItemStack chestStack = event.getEntityLiving().getItemBySlot(EquipmentSlotType.CHEST);
+			if (chestStack.getItem() instanceof JetpackItem) {
+				if (JetpackItem.consumeFallEnergy(chestStack)) {
+					event.setCanceled(true);
+				}
+			}
+		}
 	}
 
 	@SubscribeEvent
@@ -73,13 +131,16 @@ public class JetpackModule implements IModule {
 			ItemStack chestStack = player.inventory.armor.get(2);
 			if (isJetpackOn(player, chestStack)) {
 				JetpackMode jetpackMode = JetpackItem.getMode(chestStack);
-				if (handleJetpackMotion(player, jetpackMode,
-						() -> MatyTech.KEY_MAP.has(player.getUUID(), MTKeySync.ASCEND))) {
-					player.fallDistance = 0.0F;
-					if (player instanceof ServerPlayerEntity) {
-						((ServerPlayerEntity) player).connection.aboveGroundTickCount = 0;
+				if (JetpackItem.hasFuelForFlight(chestStack, jetpackMode)) {
+					if (handleJetpackMotion(player, jetpackMode,
+							() -> MatyTech.KEY_MAP.has(player.getUUID(), MTKeySync.ASCEND))) {
+						player.fallDistance = 0.0F;
+						if (player instanceof ServerPlayerEntity) {
+							((ServerPlayerEntity) player).connection.aboveGroundTickCount = 0;
+						}
 					}
 				}
+				JetpackItem.consumeFuel(chestStack, jetpackMode);
 			}
 		}
 	}
