@@ -1,0 +1,18 @@
+{
+	"type": "matytech:electrolytic_separating",
+	"input": {
+		"fluid": "minecraft:water",
+		"amount": 120
+	},
+	"energy_used": 12,
+	"outputs": [
+		{
+			"fluid": "mekanism:hydrogen",
+			"amount": 146
+		},
+		{
+			"fluid": "minecraft:milk",
+			"amount": 1000
+		}
+	]
+}

@@ -28,6 +28,7 @@
 package com.matyrobbrt.matytech.network;
 
 import com.matyrobbrt.lib.network.BaseNetwork;
+import com.matyrobbrt.lib.network.matylib.SyncValuesMessage;
 import com.matyrobbrt.matytech.api.util.MatyTechRL;
 import com.matyrobbrt.matytech.network.message.CycleItemModeMessage;
 import com.matyrobbrt.matytech.network.message.KeyMessage;
@@ -42,9 +43,11 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 public class MTNetwork extends BaseNetwork {
 
-	private static final String NETWORK_VERSION = "0.1.0";
+	private static final String NETWORK_VERSION = "0.2.0";
 
 	public static final SimpleChannel MAIN_CHANNEL = newSimpleChannel("main");
+
+	public static final SimpleChannel TILE_SYNCING = newSimpleChannel("tile_syncing");
 
 	public static void register() {
 		registerClientToServer(MAIN_CHANNEL, KeyMessage.class, KeyMessage::decode);
@@ -55,6 +58,11 @@ public class MTNetwork extends BaseNetwork {
 		registerServerToClient(MAIN_CHANNEL, UpdatePlayerDataMessage.class, UpdatePlayerDataMessage::decode);
 
 		registerClientToServer(MAIN_CHANNEL, CycleItemModeMessage.class, CycleItemModeMessage::decode);
+
+		/**
+		 * No client -> server yet! That does seem to break things
+		 */
+		registerServerToClient(TILE_SYNCING, SyncValuesMessage.class, SyncValuesMessage::decode);
 	}
 
 	private static SimpleChannel newSimpleChannel(String name) {

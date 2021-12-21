@@ -27,14 +27,12 @@
 
 package com.matyrobbrt.matytech.api.util;
 
-import com.matyrobbrt.matytech.MatyTech;
-
 import net.minecraft.util.ResourceLocation;
 
 public class MatyTechRL extends ResourceLocation {
 
 	public MatyTechRL(String name) {
-		super(MatyTech.MOD_ID, name);
+		super(ModIDs.MATY_TECH, name);
 	}
 
 }

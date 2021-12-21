@@ -49,6 +49,14 @@ public class MTEnergyStorage extends EnergyStorage implements INBTSerializable<C
 		return ret;
 	}
 
+	public int extractInternalEnergy(int maxExtract, boolean simulate) {
+		int energyExtracted = Math.min(energy, maxExtract);
+		if (!simulate) {
+			energy -= energyExtracted;
+		}
+		return energyExtracted;
+	}
+
 	@Override
 	public int receiveEnergy(int maxReceive, boolean simulate) {
 		int ret = super.receiveEnergy(maxReceive, simulate);

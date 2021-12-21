@@ -40,6 +40,7 @@ import com.matyrobbrt.lib.registry.annotation.AnnotationProcessor;
 import com.matyrobbrt.matytech.api.capability.MTEnergyStorage;
 import com.matyrobbrt.matytech.api.capability.MTFluidTank;
 import com.matyrobbrt.matytech.api.item.CapabilityRenderableArmour;
+import com.matyrobbrt.matytech.api.util.ModIDs;
 import com.matyrobbrt.matytech.client.MTClientSetup;
 import com.matyrobbrt.matytech.config.CommonConfig;
 import com.matyrobbrt.matytech.config.ServerConfig;
@@ -60,7 +61,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 @Mod(MatyTech.MOD_ID)
 public class MatyTech extends ModSetup {
 
-	public static final String MOD_ID = "matytech";
+	public static final String MOD_ID = ModIDs.MATY_TECH;
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
 	public static final MTKeySync KEY_MAP = new MTKeySync();
