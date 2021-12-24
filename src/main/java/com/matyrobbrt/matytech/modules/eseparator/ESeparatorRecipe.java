@@ -27,6 +27,12 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
+/**
+ * TODO: add JEI compat
+ * 
+ * @author matyrobbrt
+ *
+ */
 @RegistryHolder(modid = com.matyrobbrt.matytech.api.util.ModIDs.MATY_TECH)
 public class ESeparatorRecipe implements IRecipe<IFluidInventory> {
 

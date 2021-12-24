@@ -36,15 +36,19 @@ import org.apache.logging.log4j.Logger;
 import com.matyrobbrt.lib.ClientSetup;
 import com.matyrobbrt.lib.ModSetup;
 import com.matyrobbrt.lib.annotation.SyncValue;
+import com.matyrobbrt.lib.network.BaseNetwork;
 import com.matyrobbrt.lib.registry.annotation.AnnotationProcessor;
+import com.matyrobbrt.matytech.api.annotation.MTAnnotationProcessor;
 import com.matyrobbrt.matytech.api.capability.MTEnergyStorage;
 import com.matyrobbrt.matytech.api.capability.MTFluidTank;
+import com.matyrobbrt.matytech.api.client.ClientRSMData;
 import com.matyrobbrt.matytech.api.item.CapabilityRenderableArmour;
 import com.matyrobbrt.matytech.api.util.ModIDs;
 import com.matyrobbrt.matytech.client.MTClientSetup;
 import com.matyrobbrt.matytech.config.CommonConfig;
 import com.matyrobbrt.matytech.config.ServerConfig;
 import com.matyrobbrt.matytech.network.MTNetwork;
+import com.matyrobbrt.matytech.network.message.to_client.SyncRSMDataMessage;
 import com.matyrobbrt.matytech.util.MTKeySync;
 import com.matyrobbrt.matytech.util.PlayerGearData;
 
@@ -66,11 +70,13 @@ public class MatyTech extends ModSetup {
 
 	public static final MTKeySync KEY_MAP = new MTKeySync();
 
-	public static final AnnotationProcessor ANN_PROCESSOR = new AnnotationProcessor(MOD_ID);
+	public static final MTAnnotationProcessor ANN_PROCESSOR = new MTAnnotationProcessor(MOD_ID);
 
 	public MatyTech() {
 		super(MOD_ID);
 		ForgeMod.enableMilkFluid();
+
+		ClientRSMData.setUpdater(data -> BaseNetwork.sendToAll(MTNetwork.MAIN_CHANNEL, new SyncRSMDataMessage(data)));
 
 		ANN_PROCESSOR.afterInit(() -> {
 			CommonConfig.register();

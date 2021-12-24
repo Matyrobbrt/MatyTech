@@ -34,6 +34,7 @@ import com.matyrobbrt.matytech.network.message.CycleItemModeMessage;
 import com.matyrobbrt.matytech.network.message.KeyMessage;
 import com.matyrobbrt.matytech.network.message.UpdateGearMessage;
 import com.matyrobbrt.matytech.network.message.UpdatePlayerDataMessage;
+import com.matyrobbrt.matytech.network.message.to_client.SyncRSMDataMessage;
 
 import net.minecraft.entity.Entity;
 
@@ -58,6 +59,8 @@ public class MTNetwork extends BaseNetwork {
 		registerServerToClient(MAIN_CHANNEL, UpdatePlayerDataMessage.class, UpdatePlayerDataMessage::decode);
 
 		registerClientToServer(MAIN_CHANNEL, CycleItemModeMessage.class, CycleItemModeMessage::decode);
+
+		registerServerToClient(MAIN_CHANNEL, SyncRSMDataMessage.class, SyncRSMDataMessage::decode);
 
 		/**
 		 * No client -> server yet! That does seem to break things

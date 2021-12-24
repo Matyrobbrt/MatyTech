@@ -29,6 +29,12 @@ import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
+/**
+ * TODO: fix the fluid extraction
+ * 
+ * @author matyrobbrt
+ *
+ */
 public class ESeparatorTileEntity extends BaseTileEntity
 		implements ISidedTickingTE, IFluidInventory, INamedContainerProvider {
 
