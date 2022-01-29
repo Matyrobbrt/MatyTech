@@ -10,7 +10,9 @@ public class ClientRSMData {
 
 	private static RoboSuitModulesData data;
 
-	public static RoboSuitModulesData getData() { return data; }
+	public static RoboSuitModulesData getData() {
+		return data == null ? new RoboSuitModulesData(RoboSuitModulesData.ID) : data;
+	}
 
 	public static void setData(RoboSuitModulesData data) { ClientRSMData.data = data; }
 

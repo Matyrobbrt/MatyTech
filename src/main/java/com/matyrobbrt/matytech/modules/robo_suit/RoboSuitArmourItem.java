@@ -2,6 +2,8 @@ package com.matyrobbrt.matytech.modules.robo_suit;
 
 import java.util.UUID;
 
+import com.matyrobbrt.matytech.api.client.ClientRSMData;
+import com.matyrobbrt.matytech.api.robo_suit.module.IRoboSuitModuleHolder;
 import com.matyrobbrt.matytech.api.robo_suit.module.ModuleInventory;
 import com.matyrobbrt.matytech.api.robo_suit.module.RoboSuitModulesData;
 
@@ -16,7 +18,7 @@ import net.minecraft.world.World;
 
 import mekanism.common.item.gear.BaseSpecialArmorMaterial;
 
-public class RoboSuitArmourItem extends ArmorItem {
+public class RoboSuitArmourItem extends ArmorItem implements IRoboSuitModuleHolder {
 
 	public static final IArmorMaterial MATERIAL = new BaseSpecialArmorMaterial() {
 
@@ -30,12 +32,17 @@ public class RoboSuitArmourItem extends ArmorItem {
 
 	public static final String MODULE_INVENTORY_ID = "moduleInventoryUUID";
 
+	@Override
+	public UUID getStackModulesUUID(ItemStack stack) {
+		return getStackUUID(stack);
+	}
+
 	public static UUID getStackUUID(final ItemStack stack) {
-		if (stack.getOrCreateTag().hasUUID(MODULE_INVENTORY_ID)) {
-			return stack.getOrCreateTag().getUUID(MODULE_INVENTORY_ID);
+		if (stack.getOrCreateTag().contains(MODULE_INVENTORY_ID)) {
+			return UUID.fromString(stack.getOrCreateTag().getString(MODULE_INVENTORY_ID));
 		} else {
 			UUID id = UUID.randomUUID();
-			stack.getOrCreateTag().putUUID(MODULE_INVENTORY_ID, id);
+			stack.getOrCreateTag().putString(MODULE_INVENTORY_ID, id.toString());
 			return id;
 		}
 	}
@@ -47,8 +54,9 @@ public class RoboSuitArmourItem extends ArmorItem {
 
 	@Override
 	public void onArmorTick(ItemStack $stack, World world, PlayerEntity player) {
-		if (!world.isClientSide()) {
-			getModules($stack, world.getServer()).getModules().forEach(stack -> stack.onClientTick($stack, player));
+		if (world.isClientSide()) {
+			ClientRSMData.getData().getOrCreateInventory(getStackUUID($stack)).getModules()
+					.forEach(stack -> stack.onClientTick($stack, player));
 		} else {
 			getModules($stack, world.getServer()).getModules().forEach(stack -> stack.onServerTick($stack, player));
 		}

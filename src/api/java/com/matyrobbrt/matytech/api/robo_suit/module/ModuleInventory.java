@@ -16,7 +16,15 @@ public class ModuleInventory implements INBTSerializable<CompoundNBT> {
 
 	public List<RoboSuitModuleStack> getModules() { return modules; }
 
-	public RoboSuitModuleStack addModule(RoboSuitModuleStack stack, ItemStack container, PlayerEntity player,
+	/**
+	 * 
+	 * @param stack
+	 * @param container
+	 * @param player
+	 * @param simulate
+	 * @return the remainder
+	 */
+	public RoboSuitModuleStack addModule(RoboSuitModuleStack stack, ItemStack container,
 			boolean simulate) {
 		boolean addedToStack = false;
 		RoboSuitModuleStack toReturn = stack.copy();
@@ -26,7 +34,7 @@ public class ModuleInventory implements INBTSerializable<CompoundNBT> {
 				if (toAdd > 0) {
 					if (!simulate) {
 						module.grow(toAdd);
-						module.getModule().onAdded(module, container, player);
+						module.getModule().onAdded(module, container);
 					}
 					toReturn.shrink(toAdd);
 					addedToStack = true;
@@ -39,6 +47,34 @@ public class ModuleInventory implements INBTSerializable<CompoundNBT> {
 			toReturn = RoboSuitModuleStack.EMPTY;
 		}
 		return toReturn;
+	}
+
+	/**
+	 * 
+	 * @param stack
+	 * @param container
+	 * @param player
+	 * @param simulate
+	 * @return the stack that was removed
+	 */
+	public RoboSuitModuleStack removeModule(RoboSuitModuleStack stack, ItemStack container, PlayerEntity player,
+			boolean simulate) {
+		if (stack.getCount() < 1) { return RoboSuitModuleStack.EMPTY; }
+		RoboSuitModuleStack toReturn = RoboSuitModuleStack.EMPTY;
+		RoboSuitModuleStack currentModule = getStackForModuleType(stack.getModule());
+		if (!currentModule.isEmpty()) {
+			int removed = Math.min(stack.getCount(), currentModule.getCount());
+			toReturn = currentModule.copy();
+			toReturn.setCount(removed);
+			if (!simulate) {
+				currentModule.shrink(removed);
+			}
+		}
+		return toReturn;
+	}
+
+	public RoboSuitModuleStack getStackForModuleType(RoboSuitModule moduleType) {
+		return modules.stream().filter(s -> s.getModule() == moduleType).findFirst().orElse(RoboSuitModuleStack.EMPTY);
 	}
 
 	public boolean hasModule(RoboSuitModule moduleType) {

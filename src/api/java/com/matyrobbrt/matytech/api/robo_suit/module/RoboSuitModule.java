@@ -48,11 +48,11 @@ public class RoboSuitModule extends ForgeRegistryEntry<RoboSuitModule> {
 
 	}
 
-	public void onAdded(RoboSuitModuleStack moduleStack, @Nullable ItemStack stack, @Nullable PlayerEntity player) {
+	public void onAdded(RoboSuitModuleStack moduleStack, @Nullable ItemStack stack) {
 
 	}
 
-	public void onRemoved(RoboSuitModuleStack moduleStack, @Nullable ItemStack stack, @Nullable PlayerEntity player) {
+	public void onRemoved(RoboSuitModuleStack moduleStack, @Nullable ItemStack stack) {
 
 	}
 

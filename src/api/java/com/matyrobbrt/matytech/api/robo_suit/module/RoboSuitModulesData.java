@@ -8,7 +8,6 @@ import javax.annotation.WillNotClose;
 import com.matyrobbrt.matytech.api.client.ClientRSMData;
 import com.matyrobbrt.matytech.api.util.ModIDs;
 
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.server.MinecraftServer;
@@ -29,7 +28,11 @@ public class RoboSuitModulesData extends WorldSavedData {
 	}
 
 	public static RoboSuitModulesData getDefaultInstance(World level) {
-		return getDefaultInstance(level.getServer());
+		if (!level.isClientSide()) {
+			return getDefaultInstance(level.getServer());
+		} else {
+			return ClientRSMData.getData();
+		}
 	}
 
 	public static RoboSuitModulesData getDefaultInstance(@WillNotClose MinecraftServer server) {
@@ -38,8 +41,8 @@ public class RoboSuitModulesData extends WorldSavedData {
 	}
 
 	public RoboSuitModuleStack addModule(UUID uuid, RoboSuitModuleStack moduleStack, ItemStack container,
-			PlayerEntity player, boolean simulate) {
-		RoboSuitModuleStack toRet = getOrCreateInventory(uuid).addModule(moduleStack, container, player, simulate);
+			boolean simulate) {
+		RoboSuitModuleStack toRet = getOrCreateInventory(uuid).addModule(moduleStack, container, simulate);
 		setDirty();
 		return toRet;
 	}
@@ -75,6 +78,8 @@ public class RoboSuitModulesData extends WorldSavedData {
 		}
 	}
 
+	public boolean isEmpty() { return moduleInventories.isEmpty(); }
+
 	public static class MIMap extends LinkedHashMap<UUID, ModuleInventory>
 			implements INBTSerializable<CompoundNBT> {
 
@@ -89,7 +94,7 @@ public class RoboSuitModulesData extends WorldSavedData {
 
 		@Override
 		public void deserializeNBT(CompoundNBT nbt) {
-			nbt.getAllKeys().forEach(id -> put(UUID.fromString(id), (ModuleInventory) nbt.get(id)));
+			nbt.getAllKeys().forEach(id -> put(UUID.fromString(id), ModuleInventory.fromNBT(nbt.getCompound(id))));
 		}
 
 		@Override
